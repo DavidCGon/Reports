@@ -1,6 +1,8 @@
 ##Cargo los dataset
 
-dataset <- read_excel("informesexcel.xlsx")
+library(readxl)
+dataset <- read_excel("resexcel.xlsx")
+dataset <- dataset[1:9]
 informesexcel <- dataset
 
 ##Saco los datos para hacer el gráfico
@@ -31,7 +33,6 @@ for (i in 1:nrow(UWES)) {
 
 ## Creo las columnas para guardar el texto de los resultados de los informes
 
-library(readxl)
 results <- read_excel("textoreport.xlsx",sheet = "RESULTADOS")
 colnames(results) <- c("Niv","GHQ","UWES","RESIL")
 restest <- matrix(ncol=3,nrow=nrow(informesexcel))
@@ -42,7 +43,7 @@ informesexcel <- cbind(informesexcel,restest)
 
 for (i in 1:nrow(informesexcel)) {
   if(informesexcel$GHQ_12_INFORME[i]==0){
-    informesexcel$resultsGHQ[i]=c("No se ha aplicado esta prueba, por lo tanto no podemos ofrecerle resultado")
+    informesexcel$resultsGHQ[i]=c("No se ha cumplimentado esta prueba, por lo tanto no podemos ofrecerle resultado")
   } else {
     if(informesexcel$GHQ_12_INFORME[i]==1){
       informesexcel$resultsGHQ[i]=results$GHQ[1]
@@ -61,7 +62,7 @@ for (i in 1:nrow(informesexcel)) {
 
 for (i in 1:nrow(informesexcel)) {
   if(informesexcel$TOTAL_UWES_9_INFORME[i]==0){
-    informesexcel$resultsUWES[i]=c("No se ha aplicado esta prueba, por lo tanto no podemos ofrecerle resultado")
+    informesexcel$resultsUWES[i]=c("No se ha cumplimentado esta prueba, por lo tanto no podemos ofrecerle resultado")
   } else {
     if(informesexcel$TOTAL_UWES_9_INFORME[i]==1){
       informesexcel$resultsUWES[i]=results$UWES[1]
@@ -80,7 +81,7 @@ for (i in 1:nrow(informesexcel)) {
 
 for (i in 1:nrow(informesexcel)) {
   if(informesexcel$RESILIENCIA_INFORME[i]==0){
-    informesexcel$resultsResi[i]=c("No se ha aplicado esta prueba, por lo tanto no podemos ofrecerle resultado")
+    informesexcel$resultsResi[i]=c("No se ha cumplimentado esta prueba, por lo tanto no podemos ofrecerle resultado")
   } else {
     if(informesexcel$RESILIENCIA_INFORME[i]==1){
       informesexcel$resultsResi[i]=results$RESIL[1]
@@ -177,4 +178,5 @@ for (i in 1:nrow(informesexcel)) {
 }
 rm(path,i)
 
-write.csv(informesexcel,"informesexcel.csv")
+library(openxlsx)
+write.xlsx(informesexcel,"resexcel.xlsx",col.names=T)
