@@ -1,21 +1,23 @@
 ##Cargo los dataset
 
-library(readxl)
-dataset <- read_excel("resexcel.xlsx")
-dataset <- dataset[1:9]
+dataset <- read_sav("BD_INFORMES.sav")
 informesexcel <- dataset
+informesexcel[is.na(informesexcel)]=0
 
 ##Saco los datos para hacer el gráfico
 
-tests <- as.matrix(dataset[c(4,5,9)])
-UWES <- as.matrix(dataset[c(6,7,8)])
+tests <- as.matrix(informesexcel[40:42])
+UWES <- as.matrix(informesexcel[37:39])
 
 ## Creo la carpeta para guardar cada gráfico de los resultados de los 3 tests.
 dir.create('.\\tests')
 setwd("./tests")
+colnames(tests) <- c("Compromiso en el trabajo","Resiliencia","Salud Mental Autopercibida")
+tests <- cbind(tests,dataset$IDENTIFICACIÓN)
+tests <- tests[match(informesexcelclean$`dataset$IDENTIFICACIÓN`,tests[,4]),]
 for (i in 1:nrow(tests)) {
-png(file=paste0("testresults",i,".png"),width=759, height=500,units="px")
-barplot(tests[i,],horiz = TRUE,xlim=c(0,5),col=c("dodgerblue3","firebrick3","goldenrod3"),main="Resultados tests",names.arg = c("Resiliencia","GHQ_12","UWES_9"),axes=FALSE)
+png(file=paste0("testresults",tests[i,4],".png"),width=759, height=500,units="px")
+barplot(tests[i,1:3],horiz = TRUE,xlim=c(0,5),col=c("dodgerblue3","firebrick3","goldenrod3"),main="Resultados tests",names.arg = c("Compromiso en \n el trabajo","Resiliencia","Salud Mental \n Auto percibida"),axes=FALSE)
 axis(1, at=0:5, labels=c("No aplicado","Muy Bajo","Bajo","Medio","Alto","Muy Alto"))
 dev.off()
 }
@@ -37,7 +39,7 @@ results <- read_excel("textoreport.xlsx",sheet = "RESULTADOS")
 colnames(results) <- c("Niv","GHQ","UWES","RESIL")
 restest <- matrix(ncol=3,nrow=nrow(informesexcel))
 colnames(restest)=c("resultsGHQ","resultsUWES","resultsResi")
-informesexcel <- cbind(informesexcel,restest)
+informesexcel <- as.data.frame(cbind(tests,restest))
 
 ## Bucle que pega el código del resultado del GHQ
 
@@ -178,5 +180,22 @@ for (i in 1:nrow(informesexcel)) {
 }
 rm(path,i)
 
+##Añadir email y pseudonomino
+informesexcel <- cbind(informesexcel,dataset$Correoelectrónico,dataset$Seudónimo,dataset$IDENTIFICACIÓN)
+
+##Limpiar 
+informesexcel$`dataset$Correoelectrónico`[informesexcel$`dataset$Correoelectrónico`==""]=NA
+library(stringr)
+informesexcelclean <- informesexcel[which(str_detect(informesexcel$`dataset$Correoelectrónico`,"@")),]
+informesexcelclean <- informesexcelclean[match(unique(informesexcelclean$`dataset$Correoelectrónico`),informesexcelclean$`dataset$Correoelectrónico`),]
+informesexcelclean[,14] <- c("yolanda@cpsur.com")
+
+##Guardar
 library(openxlsx)
-write.xlsx(informesexcel,"resexcel.xlsx",col.names=T)
+write.xlsx(informesexcelclean,"resexcel.xlsx",col.names=T)
+
+##Dividr los pdf
+library(pdftools)
+setwd('./Reports')
+paginas <- matrix(ncol=2,nrow=nrow(informesexcelclean))
+paginas[,1] <- c(1,seq(4,759,3))
