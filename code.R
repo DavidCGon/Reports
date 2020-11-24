@@ -1,23 +1,23 @@
 ##Cargo los dataset
-
+library(haven)
 dataset <- read_sav("BD_INFORMES.sav")
 informesexcel <- dataset
 informesexcel[is.na(informesexcel)]=0
 
 ##Saco los datos para hacer el gráfico
 
-tests <- as.matrix(informesexcel[40:42])
+tests <- as.matrix(informesexcel[c(82,83,87)])
 UWES <- as.matrix(informesexcel[37:39])
 
 ## Creo la carpeta para guardar cada gráfico de los resultados de los 3 tests.
 dir.create('.\\tests')
 setwd("./tests")
-colnames(tests) <- c("Compromiso en el trabajo","Resiliencia","Salud Mental Autopercibida")
+colnames(tests) <- c("Resiliencia","Salud Mental Autopercibida","Compromiso en el trabajo")
 tests <- cbind(tests,dataset$IDENTIFICACIÓN)
 tests <- tests[match(informesexcelclean$`dataset$IDENTIFICACIÓN`,tests[,4]),]
 for (i in 1:nrow(tests)) {
 png(file=paste0("testresults",tests[i,4],".png"),width=759, height=500,units="px")
-barplot(tests[i,1:3],horiz = TRUE,xlim=c(0,5),col=c("dodgerblue3","firebrick3","goldenrod3"),main="Resultados tests",names.arg = c("Compromiso en \n el trabajo","Resiliencia","Salud Mental \n Auto percibida"),axes=FALSE)
+barplot(tests[i,1:3],horiz = TRUE,xlim=c(0,5),col=c("dodgerblue3","goldenrod3","firebrick3"),main="Resultados tests",names.arg = c("Resiliencia","Salud Mental \n Auto percibida","Compromiso en \n el trabajo"),axes=FALSE)
 axis(1, at=0:5, labels=c("No aplicado","Muy Bajo","Bajo","Medio","Alto","Muy Alto"))
 dev.off()
 }
@@ -34,7 +34,7 @@ for (i in 1:nrow(UWES)) {
 }
 
 ## Creo las columnas para guardar el texto de los resultados de los informes
-
+library(readxl)
 results <- read_excel("textoreport.xlsx",sheet = "RESULTADOS")
 colnames(results) <- c("Niv","GHQ","UWES","RESIL")
 restest <- matrix(ncol=3,nrow=nrow(informesexcel))
@@ -199,3 +199,29 @@ library(pdftools)
 setwd('./Reports')
 paginas <- matrix(ncol=2,nrow=nrow(informesexcelclean))
 paginas[,1] <- c(1,seq(4,759,3))
+
+#Send emails
+data <- read_excel("resexcel.xlsx")
+data[15]=paste0("C:/Users/david/Desktop/Reports/Reports/Reports/allresults-",seq(1,419,1),".pdf")
+library(mailR)
+for(i in 1:1)
+email <- send.mail(from="resultsinvestigacioncovid19@gmail.com",
+          to=data$Correo[i],
+          subject="Informe Resultados Investigación COVID",
+          body="SE ADJUNTA INFORME CON LOS RESULTADOS OBTENIDOS EN EL ESTUDIO POLICOVID-19.
+
+ 
+
+MUCHAS GRACIAS POR SU PARTICIPACIÓN.
+
+ 
+
+NO RESPONDAN A ESTE CORREO, ES AUTOMÁTICO.",
+          html=T,
+          smtp=list(host.name = "smtp.gmail.com",
+                    port = 465,
+                    user.name = "resultsinvestigacioncovid19@gmail.com",
+                    passwd = "report43",
+                    ssl = T),
+          authenticate=T,
+          attach.files=data$...15[i])
